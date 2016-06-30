@@ -1,7 +1,6 @@
-from psychopy import visual, core, event, logging, gui
+from psychopy import visual, core, event, logging, gui, data
 import os, time
-
-######## Define experiment constant #####################################
+import csv
 
 clippath= '/home/claire/Documents/Experiment/Imagery/Clips/Animal/cat.mp4' 
 vismaskpath = '/home/claire/Documents/Experiment/Scripts/ExpeImagery/Video_processing/Scramb/'
@@ -9,12 +8,69 @@ pixpath = '/home/claire/Documents/Experiment/Imagery/Frames/Animals/cat_frame.pn
 
 if not os.path.exists(clippath):
         raise RuntimeError("Video File could not be found:"+clippath)
-        
 
 if not os.path.exists(vismaskpath):
         raise RuntimeError("Video File could not be found:"+vismaskpath)
 
+if not os.path.exists(pixpath):
+        raise RuntimeError("Video File could not be found:"+pixpath)
 
+
+#TRIALS_FILE = '.csv'
+
+#---------------------------------------
+# Store info about the experiment session
+#---------------------------------------
+
+expName = 'Visemi'  
+expInfo = {'participant':'', 'session': ''}
+dlg = gui.DlgFromDict(dictionary=expInfo, title=expName)
+if dlg.OK == False: core.quit()  # user pressed cancel  
+expInfo['date'] = data.getDateStr()  # add a simple timestamp  
+expInfo['expName'] = expName
+
+# Experiment handler
+thisExp = data.ExperimentHandler(name=expName, version='',
+        extraInfo=expInfo, runtimeInfo=None,
+	originPath=None,
+	savePickle=False, 
+	saveWideText=False) #prevent the experiment handler to write expe data upon termination (and overwriting our files)
+	
+
+#--------------------------------------
+# Load trial files 
+#---------------------------------------
+
+# read from csv file
+#trialList = data.importConditions(TRIALS_FILE, returnFieldNames=False)
+trials = data.TrialHandler(trialList, nReps=1, method='sequential', extraInfo=expInfo)
+trials.data.addDataType('respKey')
+trials.data.addDataType('respTime')
+trials.data.addDataType('stimOnset')
+trials.data.addDataType('scanOnset')
+
+
+
+#----------------
+# Set up logging 
+#----------------
+
+globalClock = core.Clock()
+
+logging.console.setLevel(logging.DEBUG)
+
+if not os.path.isdir('Logdata'):
+    os.makedirs('Logdata')  # if this fails (e.g. permissions) we will get error
+filename = 'Logdata' + os.path.sep + '%s_%s' %(expInfo['participant'], expInfo['session'])
+logging.setDefaultClock(globalClock)
+logFileExp = logging.LogFile(filename +'.log', level=logging.EXP)
+logging.console.setLevel(logging.INFO)  # this outputs to the screen, not a file
+
+
+
+#--------------------------------------
+#Define experiment constant 
+#--------------------------------------
 
 win = visual.Window(size=(1024, 768), 
         fullscr=True, 
@@ -37,11 +93,15 @@ fix_cross = visual.TextStim(win =win,
         color='white'
         )
 
-######### Set Keys for response and experiment flow ##################
+#-------------------------------------------
+# Set Keys for response and experiment flow 
+#-------------------------------------------
+
 keyStop = ['space'] # indicate stop of movie clip and stop of mental imagery
 
-######## Define rating scale and questionnaire after each MI trial ################
-
+#-------------------------------------------------------------
+# Define rating scale and questionnaire after each MI trial 
+#-------------------------------------------------------------
 move_quest = visual.TextStim(win, 
         name = 'movequest', 
         text = 'Was your mental image moving or still ?',
@@ -76,18 +136,21 @@ effRatingScale= visual.RatingScale (win,
         choices= ['easy','don''t know', 'difficult'], 
        )
 
-
-######## Fixation cross ##############
+#-----------------
+# Fixation cross 
+#-----------------
 
 def fixation():
     fix_cross.draw()
     win.flip()
     core.wait(1)
 
+#------------------
+# Questionnaire 
+#------------------
 
-######## Questionnaire ###################
-
-def pheno():
+def pheno(trial):
+    event.clear(Events)
     while moveRatingScale.noResponse: 
         move_quest.draw()
         moveRatingScale.draw()
@@ -104,7 +167,13 @@ def pheno():
         effRatingScale.draw()
         win.flip()
 
-####### Play movie #####################
+    trials.addData('movement', moveRatingScale.getRating())
+    trials.addData('similarity', simRatingScale.getRating())
+    trials.addData('effort', effRatingScale.getRating())
+
+#-------------
+# Play movie 
+#-------------
 
 def playclip(clippath):
     fixation()
@@ -123,9 +192,10 @@ def playclip(clippath):
 
     # get key press at the end of clip
     event.waitKeys(keyList=keyStop)
-
-
-######## Play visual noise ##############
+    
+#------------------------
+# Play visual noise
+#------------------------
 
 def playmask(vismaskpath):
     for n in range (1,3):
@@ -141,8 +211,9 @@ def playmask(vismaskpath):
         win.flip()
         core.wait(0.5)
 
-
-####### Show picture ############
+#------------------
+# Show picture 
+#------------------
 
 def showpix(pixpath):
     fixation()
@@ -159,7 +230,9 @@ def showpix(pixpath):
     core.wait(1)
     event.waitKeys(keyList=keyStop)
 
-######### Mental Imagery trial ##############
+#------------------------
+# Mental Imagery trial 
+#------------------------
 
 
 def imagery():
@@ -167,8 +240,10 @@ def imagery():
     win.flip()   
     event.waitKeys(keyList=keyStop)
 
+#---------------------
+# Define Movie Block 
+#---------------------
 
-######### Define Movie Block #############################
 def movieblock():    
     # play video clip
     playclip(clippath)
@@ -182,15 +257,18 @@ def movieblock():
     # display phenomenological questions
     pheno()
 
-
-######## Define Picture Block ##############
+#------------------------
+# Define Picture Block 
+#------------------------
 
 def pixblock():
     showpix(pixpath)
     imagery()
     pheno()
 
-###############
+#-----------------
+# Run Experiment
+#----------------
 
 pixblock()
 movieblock()
