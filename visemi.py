@@ -2,18 +2,18 @@ from psychopy import visual, core, event, logging, gui, data
 import os, time
 import csv
 
-clippath= '/home/claire/Documents/Experiment/Imagery/Clips/Animal/cat.mp4' 
-vismaskpath = '/home/claire/Documents/Experiment/Scripts/ExpeImagery/Video_processing/Scramb/'
-pixpath = '/home/claire/Documents/Experiment/Imagery/Frames/Animals/cat_frame.png' 
+stimpath= '/home/claire/Documents/Experiment/Imagery/Stimuli/' 
+#vismaskpath = '/home/claire/Documents/Experiment/Imagery/Clips/Animal/'
+#pixpath = '/home/claire/Documents/Experiment/Imagery/Frames/Animals/cat_frame.png' 
 
-if not os.path.exists(clippath):
-        raise RuntimeError("Video File could not be found:"+clippath)
+if not os.path.exists(stimpath):
+        raise RuntimeError("Video File could not be found:"+stimpath)
 
-if not os.path.exists(vismaskpath):
-        raise RuntimeError("Video File could not be found:"+vismaskpath)
+#if not os.path.exists(vismaskpath):
+#        raise RuntimeError("Video File could not be found:"+vismaskpath)
 
-if not os.path.exists(pixpath):
-        raise RuntimeError("Video File could not be found:"+pixpath)
+#if not os.path.exists(pixpath):
+#        raise RuntimeError("Video File could not be found:"+pixpath)
 
 
 #TRIALS_FILE = '.csv'
@@ -29,6 +29,8 @@ if dlg.OK == False: core.quit()  # user pressed cancel
 expInfo['date'] = data.getDateStr()  # add a simple timestamp  
 expInfo['expName'] = expName
 
+
+
 # Experiment handler
 thisExp = data.ExperimentHandler(name=expName, version='',
         extraInfo=expInfo, runtimeInfo=None,
@@ -43,11 +45,11 @@ thisExp = data.ExperimentHandler(name=expName, version='',
 
 # read from csv file
 #trialList = data.importConditions(TRIALS_FILE, returnFieldNames=False)
-trials = data.TrialHandler(trialList, nReps=1, method='sequential', extraInfo=expInfo)
-trials.data.addDataType('respKey')
-trials.data.addDataType('respTime')
-trials.data.addDataType('stimOnset')
-trials.data.addDataType('scanOnset')
+#trials = data.TrialHandler(trialList, nReps=1, method='sequential', extraInfo=expInfo)
+#trials.data.addDataType('respKey')
+#trials.data.addDataType('respTime')
+#trials.data.addDataType('stimOnset')
+#trials.data.addDataType('scanOnset')
 
 
 
@@ -55,16 +57,16 @@ trials.data.addDataType('scanOnset')
 # Set up logging 
 #----------------
 
-globalClock = core.Clock()
-
-logging.console.setLevel(logging.DEBUG)
-
-if not os.path.isdir('Logdata'):
-    os.makedirs('Logdata')  # if this fails (e.g. permissions) we will get error
-filename = 'Logdata' + os.path.sep + '%s_%s' %(expInfo['participant'], expInfo['session'])
-logging.setDefaultClock(globalClock)
-logFileExp = logging.LogFile(filename +'.log', level=logging.EXP)
-logging.console.setLevel(logging.INFO)  # this outputs to the screen, not a file
+#globalClock = core.Clock()
+#
+#logging.console.setLevel(logging.DEBUG)
+#
+#if not os.path.isdir('Logdata'):
+#    os.makedirs('Logdata')  # if this fails (e.g. permissions) we will get error
+#filename = 'Logdata' + os.path.sep + '%s_%s' %(expInfo['participant'], expInfo['session'])
+#logging.setDefaultClock(globalClock)
+#logFileExp = logging.LogFile(filename +'.log', level=logging.EXP)
+#logging.console.setLevel(logging.INFO)  # this outputs to the screen, not a file
 
 
 
@@ -75,7 +77,7 @@ logging.console.setLevel(logging.INFO)  # this outputs to the screen, not a file
 win = visual.Window(size=(1024, 768), 
         fullscr=True, 
         screen=0, 
-        allowGUI=False, 
+        allowGUI=True, 
         allowStencil=False, 
         monitor='testMonitor', 
         color=[0,0,0], 
@@ -89,8 +91,8 @@ fix_cross = visual.TextStim(win =win,
         text= '+',
         font= 'Arial', 
         pos=[0,0],
-        height = 0.09, 
-        color='white'
+        height = 0.06, 
+        color='black'
         )
 
 #-------------------------------------------
@@ -98,6 +100,9 @@ fix_cross = visual.TextStim(win =win,
 #-------------------------------------------
 
 keyStop = ['space'] # indicate stop of movie clip and stop of mental imagery
+
+
+mouse= event.Mouse()
 
 #-------------------------------------------------------------
 # Define rating scale and questionnaire after each MI trial 
@@ -149,8 +154,8 @@ def fixation():
 # Questionnaire 
 #------------------
 
-def pheno(trial):
-    event.clear(Events)
+def pheno():
+    #event.clear(Events)
     while moveRatingScale.noResponse: 
         move_quest.draw()
         moveRatingScale.draw()
@@ -166,21 +171,22 @@ def pheno(trial):
         eff_quest.draw()
         effRatingScale.draw()
         win.flip()
+    #event.clear(Events)
 
-    trials.addData('movement', moveRatingScale.getRating())
-    trials.addData('similarity', simRatingScale.getRating())
-    trials.addData('effort', effRatingScale.getRating())
+#    trials.addData('movement', moveRatingScale.getRating())
+#    trials.addData('similarity', simRatingScale.getRating())
+#    trials.addData('effort', effRatingScale.getRating())
 
 #-------------
 # Play movie 
 #-------------
 
-def playclip(clippath):
+def playclip(stimpath):
     fixation()
     clip = visual.MovieStim(win=win,
             name= 'clip', 
-            filename= clippath,
-            size = [800,600],
+            filename= stimpath +'ani_01_clip.mp4',
+            size = [800, 450],
             ori =0, 
             pos=[0,0], 
             opacity =1, 
@@ -190,35 +196,38 @@ def playclip(clippath):
         clip.draw()
         win.flip()
 
+    fixation()
     # get key press at the end of clip
-    event.waitKeys(keyList=keyStop)
-    
+   # event.waitKeys(keyList=keyStop)
+    mouse.getPressed()
 #------------------------
 # Play visual noise
 #------------------------
 
-def playmask(vismaskpath):
-    for n in range (1,3):
-        vismask = visual.ImageStim(win =win, 
-            image = vismaskpath + 's_' + str(n) + '.png', 
-            pos = [0,0],
-            size = [800,600],
-            opacity =1, 
-            units = 'pix'
-            )
-
+def playmask(stimpath):
+     vismask = visual.MovieStim(win =win,
+             filename= stimpath + 'ani_01_mask' + '.mp4', 
+            #image = '/home/claire/Documents/Experiment/Imagery/Clips/Animal/s_frame_cat' + str(n) +'.png',
+             pos = [0,0],
+             size = [800,450],
+             opacity =1, 
+             units = 'pix'
+             )
+    
+     while vismask.status != visual.FINISHED:
         vismask.draw()
         win.flip()
-        core.wait(0.5)
+
+
 
 #------------------
 # Show picture 
 #------------------
 
-def showpix(pixpath):
+def showpix(stimpath):
     fixation()
     pix = visual.ImageStim(win =win, 
-            image = pixpath, 
+            image = stimpath + 'ani_01_frame.png', 
             pos = [0,0], 
             size = [800, 600], 
             opacity = 1,
@@ -228,8 +237,8 @@ def showpix(pixpath):
     pix.draw()
     win.flip()
     core.wait(1)
-    event.waitKeys(keyList=keyStop)
-
+    #event.waitKeys(keyList=keyStop)
+    mouse.getPressed()
 #------------------------
 # Mental Imagery trial 
 #------------------------
@@ -246,14 +255,11 @@ def imagery():
 
 def movieblock():    
     # play video clip
-    playclip(clippath)
-
+    playclip(stimpath)
     # play visual mask
-    playmask(vismaskpath)
-
+    playmask(stimpath)
     # mental imagery trial
     imagery()
-
     # display phenomenological questions
     pheno()
 
@@ -262,7 +268,7 @@ def movieblock():
 #------------------------
 
 def pixblock():
-    showpix(pixpath)
+    showpix(stimpath)
     imagery()
     pheno()
 
@@ -270,7 +276,7 @@ def pixblock():
 # Run Experiment
 #----------------
 
-pixblock()
+#pixblock()
 movieblock()
 
 core.quit()
