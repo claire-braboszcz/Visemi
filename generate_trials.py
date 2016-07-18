@@ -59,7 +59,7 @@ for stim in range (0, len(clip_list)):
     video_m =VideoFileClip(os.path.join(stim_path, mask[0]))
     len_mask = video_m.duration
 
-    m_trial = ['movie', clip, str(len_clip), mask, str(len_mask), clip[:3]] 
+    m_trial = ['movie', clip, str(len_clip), mask[0], str(len_mask), clip[:3]] 
 
     list_stim_movies.writerow(m_trial)
 
@@ -67,11 +67,11 @@ for pic in range (0, len(pict_list)):
     pict = pict_list[pic]
     ind = pict[:6]
     mask = [m for m in mask_list if ind in m]
-    
+
     video_m =VideoFileClip(os.path.join(stim_path, mask[0]))
     len_mask = video_m.duration
 
-    p_trial = ['picture', pict, 'NA', mask, str(len_mask), pict[:3]] 
+    p_trial = ['picture', pict, 'NA', mask[0], str(len_mask), pict[:3]] 
 
     list_stim_pict.writerow(p_trial)
 
