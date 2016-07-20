@@ -169,7 +169,7 @@ moveRatingScale= visual.RatingScale (win,
 
 sim_quest = visual.TextStim(win, 
         name = 'simquest', 
-        text = 'Was your mental image similar or different from the stimuli ?',
+        text = 'Was your mental image similar or different from the stimulu you''ve just seen ?',
         height= 0.07, 
         units= 'norm'
         )
@@ -216,10 +216,10 @@ def pheno():
 
 
 
-    while effRatingScale.noResponse: 
-        eff_quest.draw()
-        effRatingScale.draw()
-        win.flip()
+#    while effRatingScale.noResponse: 
+#        eff_quest.draw()
+#        effRatingScale.draw()
+#        win.flip()
 
 
     #event.clear(Events)
@@ -228,8 +228,8 @@ def pheno():
     trials.addData('RTscale1', moveRatingScale.getRT())
     trials.addData('scale2', simRatingScale.getRating())
     trials.addData('RTscale2',  simRatingScale.getRT())
-    trials.addData('scale3', effRatingScale.getRating())
-    trials.addData('RTscale3', effRatingScale.getRT())
+#    trials.addData('scale3', effRatingScale.getRating())
+#    trials.addData('RTscale3', effRatingScale.getRT())
 
     moveRatingScale.reset()
     simRatingScale.reset()
@@ -241,7 +241,7 @@ def pheno():
 
 def playclip(stimpath, stim):
     fixation()
-    core.wait(1)
+    core.wait(0.3)
     clip = visual.MovieStim(win=win,
             name= 'clip', 
             filename= stimpath + stim,

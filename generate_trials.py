@@ -63,6 +63,10 @@ for stim in range (0, len(clip_list)):
 
     list_stim_movies.writerow(m_trial)
 
+
+pic_durations = [2,3,4]*len(pict_list)
+random.shuffle(pic_durations)
+
 for pic in range (0, len(pict_list)):
     pict = pict_list[pic]
     ind = pict[:6]
@@ -71,7 +75,7 @@ for pic in range (0, len(pict_list)):
     video_m =VideoFileClip(os.path.join(stim_path, mask[0]))
     len_mask = video_m.duration
 
-    p_trial = ['picture', pict, 'NA', mask[0], str(len_mask), pict[:3]] 
+    p_trial = ['picture', pict, pic_durations[pic], mask[0], str(len_mask), pict[:3]] 
 
     list_stim_pict.writerow(p_trial)
 
