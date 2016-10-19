@@ -231,6 +231,7 @@ simRatingScale= visual.RatingScale (win,
 def fixation():
     pparallel.setData(0) # sets all pin low
     fix_cross.draw()
+  #  win.logOnFlip('parallel port trigger %d' %trigger_fixation , level=logging.EXP)
     win.flip()
     pparallel.setData(trigger_fixation)
     core.wait(0.005)
@@ -288,10 +289,8 @@ def pheno():
 def playclip(stimpath, stim):
     fixation()
     core.wait(0.3)
-    pparallel.setData(0) # sets all pin lo
-    pparallel.setData(trigger_stim) # sets all pin lo
-    core.wait(0.005)
-    pparallel.setData(0)
+    #pparallel.setData(0) # sets all pin lo
+    
     clip = visual.MovieStim(win=win,
             name= 'clip', 
             filename= stimpath + stim,
@@ -301,9 +300,12 @@ def playclip(stimpath, stim):
             opacity =1, 
             depth = -1.0
             )
+    pparallel.setData(trigger_stim) # sets all pin lo
+    core.wait(0.005)
+    pparallel.setData(0)
+ #   stimOnset= trialClock.getTime()
     while clip.status != visual.FINISHED:
         clip.draw()
-        stimOnset= trialClock.getTime()
         win.flip()
         
     fixation()
@@ -334,9 +336,11 @@ def playmask(stimpath, stim):
     pparallel.setData(trigger_mask) # sets all pin lo
     core.wait(0.005)
     pparallel.setData(0)
+    # win.logOnFlip('parallel port trigger mask: %d' %trigger_mask , level=logging.EXP)
+
+    maskOnset= trialClock.getTime()
     while vismask.status != visual.FINISHED:
         vismask.draw()
-        maskOnset= trialClock.getTime()
         win.flip()
 
     trials.addData('maskOnset', maskOnset)  
@@ -355,8 +359,9 @@ def showpix(stimpath, stim, duration):
             )
 
     pix.draw()    
-    stimOnset= trialClock.getTime()
+  #  win.logOnFlip('parallel port trigger picture: %d' %trigger_stim , level=logging.EXP)
     win.flip()
+    stimOnset= trialClock.getTime()
     pparallel.setData(0) # sets all pin lo
     pparallel.setData(trigger_stim) # sets all pin lo
     core.wait(0.005)
@@ -377,8 +382,8 @@ def showpix(stimpath, stim, duration):
 #------------------------
 def imagery():
     circle.draw()
-    imOnset = trialClock.getTime()
     win.flip()   
+    imOnset = trialClock.getTime()
     event.waitKeys(keyList=keyStop)
     imStop = trialClock.getTime()
     pparallel.setData(0) # sets all pin lo

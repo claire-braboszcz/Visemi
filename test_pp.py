@@ -66,6 +66,7 @@ logging.console.setLevel(logging.DEBUG)
 #
 if not os.path.isdir('Logdata'):
     os.makedirs('Logdata')  # if this fails (e.g. permissions) we will get error
+
 filename = 'Logdata' + os.path.sep + '%s_%s' %(expInfo['participant'], expInfo['session'])
 logging.setDefaultClock(globalClock)
 logFileExp = logging.LogFile(filename +'.log', level=logging.EXP)
@@ -106,6 +107,7 @@ fix_cross = visual.TextStim(win =win,
 def fixation():
     pparallel.setData(0) # sets all pin low
     fix_cross.draw()
+    win.logOnFlip('parallel port trigger %d' %trigger_fixation , level=logging.EXP)
     win.flip()
     pparallel.setData(trigger_fixation)
     core.wait(0.005)
@@ -113,7 +115,7 @@ def fixation():
 #    core.wait(1)
 
 
-for i in range(1,10):
+for i in range(3):
     fixation()
     core.wait(1)
     win.flip()
