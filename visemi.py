@@ -19,16 +19,50 @@ if not os.path.exists(stimpath):
 TRIALS_FILE = 'movie_block.csv'
 
 #---------------------------------------
-# Store info about the experiment session
+# Set up parallel port
 #---------------------------------------
 
+pparallel = None
+try:
+    from psychopy import parallel
+
+    pparallel = parallel.ParallelPort(address = 0x378) #888
+except ImportError:
+
+    class DummyParallel:
+        def setData(self, val):
+            print("Port parallele: setData %s" % val)
+    pparallel = DummyParallel()
+
+
+trigger_stim = int("00000011",2)
+trigger_mask = int("00000101",2)
+trigger_space = int("00010100", 2)
+trigger_fixation = int("10100000",2)
+
+
+
+def whatresp(resp):
+    code = None
+    if resp == "yes":
+        code = int("00000110",2)
+    elif resp == "no":
+        code = int("00001100",2)
+    elif resp == "dont know":
+        code = int("00011000",2)
+    return(code)
+    
+
+
+#---------------------------------------
+# Store info about the experiment session
+#---------------------------------------
 expName = 'Visemi'  
 expInfo = {'participant':'', 'session': ''}
 dlg = gui.DlgFromDict(dictionary=expInfo, title=expName)
 if dlg.OK == False: core.quit()  # user pressed cancel  
 expInfo['date'] = data.getDateStr()  # add a simple timestamp  
 expInfo['expName'] = expName
-
 
 
 # Experiment handler
@@ -42,7 +76,6 @@ thisExp = data.ExperimentHandler(name=expName, version='',
 #--------------------------------------
 # Load trial files 
 #---------------------------------------
-
 # read from csv file
 trialList = data.importConditions(TRIALS_FILE, returnFieldNames=False)
 trials = data.TrialHandler(trialList, nReps=1, method='sequential', extraInfo=expInfo)
@@ -58,10 +91,10 @@ trials.data.addDataType('scale2')
 trials.data.addDataType('RTscale2')
 trials.data.addDataType('scale3')
 trials.data.addDataType('RTscale3')
+
 #----------------
 # Set up logging 
 #----------------
-
 globalClock = core.Clock()
 respTime= core.Clock()
 trialClock=core.Clock()
@@ -79,13 +112,9 @@ saveFilePrefix = expInfo['participant'] + '_' + expInfo['session']
 
 saveFile = "data/" + str(saveFilePrefix) + ' (' + time.strftime('%Y-%m-%d %H-%M-%S', time.localtime()) +').csv'  # Filename for csv. E.g. "myFolder/subj1_cond2 (2013-12-28 09-53-04).csv"
 
-
-
-
 #--------------------------------------
 #Define experiment constant 
-#--------------------------------------
-
+#------------------------------------
 win = visual.Window(size=(1024, 768), 
         fullscr=True, 
         screen=0, 
@@ -97,8 +126,6 @@ win = visual.Window(size=(1024, 768),
         blendMode='avg', 
         useFBO=True,)
 
-
-
 fix_cross = visual.TextStim(win =win, 
         ori =0, 
         name='fix_cross', 
@@ -108,7 +135,6 @@ fix_cross = visual.TextStim(win =win,
         height = 0.06, 
         color='black'
         )
-
 
 circle = visual.TextStim(win =win, 
         ori =0, 
@@ -126,9 +152,21 @@ circle = visual.TextStim(win =win,
 
 
 #---------------------------------------
-# Setup end message
+# Setup text messages
 #--------------------------------------- 
 #instrPracticeClock = core.Clock()
+image_instr = visual.TextStim(win=win, ori=0, name='image_instr',
+    text=" You will see a picture. When it is replaced by a central cross press the button.\n\n You will then have to imagine the scene suggested by the picture. Press the button once you are done.\n It is important that you do not close your eyes.\n\n Ready ?\n Press the button to start", font='Arial',
+    pos=[0, 0], height=0.1, wrapWidth=None,
+    color='black', colorSpace='rgb', opacity=1,
+    depth=0.0)
+
+clip_instr = visual.TextStim(win=win, ori=0, name='clip_instr',
+    text=" You will see a short movie clip. When it has finish to play and is replaced by a central cross press the button.\n\n You will then have to imagine the scene suggested by the picture. Press the button once you are done.\n It is important that you do not close your eyes.\n\n Ready ?\n Press the button to start", font='Arial',
+    pos=[0, 0], height=0.1, wrapWidth=None,
+    color='black', colorSpace='rgb', opacity=1,
+    depth=0.0)
+
 theEnd = visual.TextStim(win=win, ori=0, name='theEnd',
     text="End of the experiment, thank you !", font='Arial',
     pos=[0, 0], height=0.04, wrapWidth=None,
@@ -146,7 +184,6 @@ pause = visual.TextStim(win=win, ori=0, name='pause',
 #-------------------------------------------
 # Set Keys for response and experiment flow 
 #-------------------------------------------
-
 keyStop = ['space'] # indicate stop of movie clip and stop of mental imagery
 
 
@@ -157,70 +194,80 @@ mouse= event.Mouse()
 #-------------------------------------------------------------
 move_quest = visual.TextStim(win, 
         name = 'movequest', 
-        text = 'Was your mental image moving or still ?',
+        text = 'Was your mental image moving ?',
         height= 0.07, 
         units= 'norm'
         )
 
 moveRatingScale= visual.RatingScale (win, 
-        choices= ['still image','don''t know', 'moving image'], 
+        choices= ['no','don''t know', 'yes'], 
        )
-
 
 sim_quest = visual.TextStim(win, 
         name = 'simquest', 
-        text = 'Was your mental image similar or different from the stimulu you''ve just seen ?',
+        text = 'Did you succeed in generating a mental image ?',
         height= 0.07, 
         units= 'norm'
         )
 
 simRatingScale= visual.RatingScale (win, 
-        choices= ['different','don''t know', 'similar'], 
+        choices= ['no','don''t know', 'yes'], 
        )
 
-eff_quest = visual.TextStim(win, 
-        name = 'effquest', 
-        text = 'How effortful was it to generate the mental image ?',
-        height= 0.07, 
-        units= 'norm'
-        )
-
-effRatingScale= visual.RatingScale (win, 
-        choices= ['easy','don''t know', 'difficult'], 
-       )
+#eff_quest = visual.TextStim(win, 
+#        name = 'effquest', 
+#        text = 'How effortful was it to generate the mental image ?',
+#        height= 0.07, 
+#        units= 'norm'
+#        )
+#
+#effRatingScale= visual.RatingScale (win, 
+#        choices= ['easy','don''t know', 'difficult'], 
+#       )
 
 #-----------------
 # Fixation cross 
 #-----------------
-
 def fixation():
+    pparallel.setData(0) # sets all pin low
     fix_cross.draw()
     win.flip()
+    pparallel.setData(trigger_fixation)
+    core.wait(0.005)
+    pparallel.setData(0)
 #    core.wait(1)
 
 #------------------
 # Questionnaire 
 #------------------
-
 def pheno():
     #event.clear(Events)
-    while moveRatingScale.noResponse: 
-        move_quest.draw()
-        moveRatingScale.draw()
-        win.flip()
-
+    pparallel.setData(0) # sets all pin lo
+                
     while simRatingScale.noResponse: 
         sim_quest.draw()
         simRatingScale.draw()
         win.flip()
-
-
-
+    trig_resp = whatresp(simRatingScale.getRating())
+    print "resp=", trig_resp,  moveRatingScale.getRating()
+    pparallel.setData(trig_resp)
+    core.wait(0.005)
+    pparallel.setData(0)
+        
+    while moveRatingScale.noResponse: 
+        move_quest.draw()
+        moveRatingScale.draw()
+        win.flip()
+    trig_resp = whatresp(moveRatingScale.getRating())
+    print "resp=", trig_resp ,  moveRatingScale.getRating()
+    pparallel.setData(trig_resp)
+    core.wait(0.005)
+    pparallel.setData(0)
+        
 #    while effRatingScale.noResponse: 
 #        eff_quest.draw()
 #        effRatingScale.draw()
 #        win.flip()
-
 
     #event.clear(Events)
 
@@ -233,15 +280,18 @@ def pheno():
 
     moveRatingScale.reset()
     simRatingScale.reset()
-    effRatingScale.reset()
+#    effRatingScale.reset()
 
 #-------------
 # Play movie 
 #-------------
-
 def playclip(stimpath, stim):
     fixation()
     core.wait(0.3)
+    pparallel.setData(0) # sets all pin lo
+    pparallel.setData(trigger_stim) # sets all pin lo
+    core.wait(0.005)
+    pparallel.setData(0)
     clip = visual.MovieStim(win=win,
             name= 'clip', 
             filename= stimpath + stim,
@@ -255,7 +305,7 @@ def playclip(stimpath, stim):
         clip.draw()
         stimOnset= trialClock.getTime()
         win.flip()
-
+        
     fixation()
     # get key press at the end of clip
     event.waitKeys(keyList=keyStop)
@@ -270,7 +320,6 @@ def playclip(stimpath, stim):
 #------------------------
 # Play visual noise
 #------------------------
-
 def playmask(stimpath, stim):
     vismask = visual.MovieStim(win =win,
              filename= stimpath + stim, 
@@ -281,6 +330,10 @@ def playmask(stimpath, stim):
              units = 'pix'
              )
     
+    pparallel.setData(0) # sets all pin lo
+    pparallel.setData(trigger_mask) # sets all pin lo
+    core.wait(0.005)
+    pparallel.setData(0)
     while vismask.status != visual.FINISHED:
         vismask.draw()
         maskOnset= trialClock.getTime()
@@ -291,8 +344,7 @@ def playmask(stimpath, stim):
 #------------------
 # Show picture 
 #------------------
-
-def showpix(stimpath, stim):
+def showpix(stimpath, stim, duration):
     fixation()
     pix = visual.ImageStim(win =win, 
             image = stimpath + stim, 
@@ -305,38 +357,41 @@ def showpix(stimpath, stim):
     pix.draw()    
     stimOnset= trialClock.getTime()
     win.flip()
-    core.wait(1)
-    event.waitKeys(keyList=keyStop)
+    pparallel.setData(0) # sets all pin lo
+    pparallel.setData(trigger_stim) # sets all pin lo
+    core.wait(0.005)
+    pparallel.setData(0)
+    core.wait(duration)
     #mouse.getPressed()
-
+    fixation()
+    # get key press at the end of clip
+    event.waitKeys(keyList=keyStop)
+    respTime= trialClock.getTime()
+   
 
     trials.addData('stimOnset', stimOnset)
     trials.addData('respTime',respTime)  
 
-
-
 #------------------------
 # Mental Imagery trial 
 #------------------------
-
-
 def imagery():
     circle.draw()
     imOnset = trialClock.getTime()
     win.flip()   
     event.waitKeys(keyList=keyStop)
     imStop = trialClock.getTime()
-
+    pparallel.setData(0) # sets all pin lo
+    pparallel.setData(trigger_space) # sets all pin lo
+    core.wait(0.005)
+    pparallel.setData(0) # sets all pin lo
 
     trials.addData('imOnset', imOnset)
     trials.addData('imStop', imStop)  
 
-
-
 #---------------------
 # Define Movie Block 
 #---------------------
-
 def movieblock(stim, mask):    
     # play video clip
     playclip(stimpath, stim)
@@ -346,31 +401,33 @@ def movieblock(stim, mask):
     imagery()
     # display phenomenological questions
     pheno()
-
-    
-
+ 
 #------------------------
 # Define Picture Block 
 #------------------------
-
-def pixblock(stim, mask):
-    showpix(stimpath, stim)
+def pixblock(stim, mask, duration):
+    showpix(stimpath, stim, duration)
     playmask(stimpath, mask)
     imagery()
     pheno()
-
 #-----------------
 # Run Experiment
 #----------------
-
-
-
+# Show instructions
+if 'picture' in TRIALS_FILE:
+    image_instr.draw()
+    win.flip()
+    event.waitKeys(keyList=keyStop)
+else:
+    clip_instr.draw()
+    win.flip()
+    event.waitKeys(keyList=keyStop)
 
 for thisTrial in trials:
     if thisTrial['Run'] == 'movie':
         movieblock(thisTrial['Stim'], thisTrial['Mask'])
     elif thisTrial['Run'] == 'picture':
-        pixblock(thisTrial['Stim'], thisTrial['Mask'])
+        pixblock(thisTrial['Stim'], thisTrial['Mask'], thisTrial['Stim_Duration'])
     elif thisTrial['Run'] == 'break':
         pause.draw(win)
         win.flip()
