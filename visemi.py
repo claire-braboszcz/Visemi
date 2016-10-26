@@ -174,7 +174,7 @@ theEnd = visual.TextStim(win=win, ori=0, name='theEnd',
     depth=0.0)
 
 pause = visual.TextStim(win=win, ori=0, name='pause',
-    text="End of the first part of the experiment", font='Arial',
+    text="Please take a short break. Press any key to continue", font='Arial',
     pos=[0, 0], height=0.04, wrapWidth=None,
     color='black', colorSpace='rgb', opacity=1,
     depth=0.0)
@@ -192,38 +192,40 @@ mouse= event.Mouse()
 #-------------------------------------------------------------
 # Define rating scale and questionnaire after each MI trial 
 #-------------------------------------------------------------
-move_quest = visual.TextStim(win, 
-        name = 'movequest', 
-        text = 'Was your mental image moving ?',
+
+vivid_quest = visual.TextStim(win, 
+        name = 'vividquest', 
+        text = 'How vivid was your mental image ?\n\n',
         height= 0.07, 
         units= 'norm'
         )
 
-moveRatingScale= visual.RatingScale (win, 
-        choices= ['no','don''t know', 'yes'], 
+vividRatingScale= visual.RatingScale (win, 
+       # choices= ['1 \n no image at all','2', '3', '4', '5\n very vivid'],
+        low=1,
+        high=5,
+        markerStart = 3,
+        leftKeys = '1',
+        rightKeys = '3',
+        acceptKeys= '2'
        )
 
-sim_quest = visual.TextStim(win, 
-        name = 'simquest', 
-        text = 'Did you succeed in generating a mental image ?',
+eff_quest = visual.TextStim(win, 
+        name = 'effquest', 
+        text = 'How effortful was it to generate the mental image ?\n\n',
         height= 0.07, 
         units= 'norm'
         )
 
-simRatingScale= visual.RatingScale (win, 
-        choices= ['no','don''t know', 'yes'], 
-       )
-
-#eff_quest = visual.TextStim(win, 
-#        name = 'effquest', 
-#        text = 'How effortful was it to generate the mental image ?',
-#        height= 0.07, 
-#        units= 'norm'
-#        )
-#
-#effRatingScale= visual.RatingScale (win, 
-#        choices= ['easy','don''t know', 'difficult'], 
-#       )
+effRatingScale= visual.RatingScale (win, 
+        #choices= [' 1 \n not effortful at all','2', '3', '4', '5 \n very effortful'], 
+        low=1,
+        high=5,
+        markerStart = 3,
+        leftKeys = '1',
+        rightKeys = '3',
+        acceptKeys= '2'
+        )
 
 #-----------------
 # Fixation cross 
@@ -238,6 +240,13 @@ def fixation():
     pparallel.setData(0)
 #    core.wait(1)
 
+
+def takepause():
+    pause.draw()
+    win.flip()
+    event.waitKeys()
+
+
 #------------------
 # Questionnaire 
 #------------------
@@ -245,43 +254,35 @@ def pheno():
     #event.clear(Events)
     pparallel.setData(0) # sets all pin lo
                 
-    while simRatingScale.noResponse: 
-        sim_quest.draw()
-        simRatingScale.draw()
+    while vividRatingScale.noResponse: 
+        vivid_quest.draw()
+        vividRatingScale.draw()
         win.flip()
-    trig_resp = whatresp(simRatingScale.getRating())
-    print "resp=", trig_resp,  moveRatingScale.getRating()
+    trig_resp = whatresp(vividRatingScale.getRating())
+    print "resp=", trig_resp,  vividRatingScale.getRating()
     pparallel.setData(trig_resp)
     core.wait(0.005)
     pparallel.setData(0)
         
-    while moveRatingScale.noResponse: 
-        move_quest.draw()
-        moveRatingScale.draw()
+    while effRatingScale.noResponse: 
+        eff_quest.draw()
+        effRatingScale.draw()
         win.flip()
-    trig_resp = whatresp(moveRatingScale.getRating())
-    print "resp=", trig_resp ,  moveRatingScale.getRating()
+    trig_resp = whatresp(effRatingScale.getRating())
+    print "resp=", trig_resp ,  effRatingScale.getRating()
     pparallel.setData(trig_resp)
     core.wait(0.005)
     pparallel.setData(0)
         
-#    while effRatingScale.noResponse: 
-#        eff_quest.draw()
-#        effRatingScale.draw()
-#        win.flip()
 
-    #event.clear(Events)
 
-    trials.addData('scale1', moveRatingScale.getRating())
-    trials.addData('RTscale1', moveRatingScale.getRT())
-    trials.addData('scale2', simRatingScale.getRating())
-    trials.addData('RTscale2',  simRatingScale.getRT())
-#    trials.addData('scale3', effRatingScale.getRating())
-#    trials.addData('RTscale3', effRatingScale.getRT())
+    trials.addData('scale1', vividRatingScale.getRating())
+    trials.addData('RTscale1', vividRatingScale.getRT())
+    trials.addData('scale2', effRatingScale.getRating())
+    trials.addData('RTscale2',  effRatingScale.getRT())
 
-    moveRatingScale.reset()
-    simRatingScale.reset()
-#    effRatingScale.reset()
+    vividRatingScale.reset()
+    effRatingScale.reset()
 
 #-------------
 # Play movie 
@@ -303,7 +304,7 @@ def playclip(stimpath, stim):
     pparallel.setData(trigger_stim) # sets all pin lo
     core.wait(0.005)
     pparallel.setData(0)
- #   stimOnset= trialClock.getTime()
+    stimOnset= trialClock.getTime()
     while clip.status != visual.FINISHED:
         clip.draw()
         win.flip()
@@ -429,13 +430,13 @@ else:
     event.waitKeys(keyList=keyStop)
 
 for thisTrial in trials:
-    if thisTrial['Run'] == 'movie':
+    if thisTrial['Stim'] == 'break':
+        takepause()
+    elif thisTrial['Run'] == 'movie':
         movieblock(thisTrial['Stim'], thisTrial['Mask'])
     elif thisTrial['Run'] == 'picture':
         pixblock(thisTrial['Stim'], thisTrial['Mask'], thisTrial['Stim_Duration'])
-    elif thisTrial['Run'] == 'break':
-        pause.draw(win)
-        win.flip()
+
 
 
 
